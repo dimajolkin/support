@@ -23,7 +23,7 @@ final class ActivityStub
      *
      * @template T of object
      *
-     * @param class-string<T> $activity
+     * @param class-string<T> $class
      * @param non-empty-string|null $taskQueue
      * @param int<0, max>|null $retryAttempts Maximum number of attempts. When exceeded the retries stop even
      *        if not expired yet. If not set or set to 0, it means unlimited, and rely on activity
@@ -60,7 +60,7 @@ final class ActivityStub
      * @return T|ActivityProxy
      */
     public static function activity(
-        string $activity,
+        string $class,
         ?string $taskQueue = null,
         ?int $retryAttempts = null,
         \DateInterval|string|int|null $retryInitInterval = null,
@@ -74,7 +74,7 @@ final class ActivityStub
         \Stringable|string|null $activityId = null,
         int $cancellationType = 0,
     ): object {
-        $attributes = self::readAttributes($activity);
+        $attributes = self::readAttributes($class);
 
         // Retry options
         $retryOptions = RetryOptions::create(
@@ -99,7 +99,7 @@ final class ActivityStub
         $activityId === null or $options = $options->withActivityId((string)$activityId);
         $cancellationType === null or $options = $options->withCancellationType($cancellationType);
 
-        return Workflow::newActivityStub($activity, $options);
+        return Workflow::newActivityStub($class, $options);
     }
 
     /**

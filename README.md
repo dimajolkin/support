@@ -84,9 +84,9 @@ class RegisterWorkflow {
     #[\Temporal\Workflow\WorkflowMethod]
     public function run(string $user) {
         yield \Temporal\Promise::all([
-            WorkflowStub::childWorkflow(GreetingWorkflow::class, executionTimeout: '1 hour'),
-            WorkflowStub::childWorkflow(SubscribeNewsWorkflow::class, executionTimeout: '10 minutes'),
-            WorkflowStub::childWorkflow(PrepareUserEnvironmentWorkflow::class, executionTimeout: '1 hour'),
+            WorkflowStub::childWorkflow(GreetingWorkflow::class, executionTimeout: '1 hour')->greet($user),
+            WorkflowStub::childWorkflow(SubscribeNewsWorkflow::class, executionTimeout: '10 minutes')->subscribe($user),
+            WorkflowStub::childWorkflow(PrepareUserSpaceWorkflow::class, executionTimeout: '1 hour')->handle($user),
         ])->then(
             // Suppress failures
             onRejected: static fn () => null,

@@ -31,7 +31,7 @@ final class ActivityStubTest extends TestCase
     {
         /** @var \Temporal\Activity\ActivityOptions $options */
         $options = ActivityStub::activity(
-            activity: AttributedWithoutInterface::class,
+            class: AttributedWithoutInterface::class,
         )->options;
 
         $this->assertSame('test-queue', $options->taskQueue);
@@ -46,7 +46,7 @@ final class ActivityStubTest extends TestCase
     {
         /** @var \Temporal\Activity\ActivityOptions $options */
         $options = ActivityStub::activity(
-            activity: AttributedWithoutInterface::class,
+            class: AttributedWithoutInterface::class,
             taskQueue: 'test-queue-override',
             retryAttempts: 0,
             retryInitInterval: 10,
