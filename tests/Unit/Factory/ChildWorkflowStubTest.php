@@ -11,6 +11,7 @@ use Temporal\Client\WorkflowOptions;
 use Temporal\Support\Factory\WorkflowStub;
 use Temporal\Support\Tests\Stub\Workflow\AttributedWithoutInterface;
 use Temporal\Workflow;
+use Temporal\Workflow\ChildWorkflowStubInterface;
 
 final class ChildWorkflowStubTest extends TestCase
 {
@@ -28,11 +29,11 @@ final class ChildWorkflowStubTest extends TestCase
         parent::setUp();
     }
 
-    public function testDefaultsFromAttributes()
+    public function testDefaultsFromAttributes(): void
     {
         /** @var WorkflowOptions $options */
         $options = WorkflowStub::childWorkflow(
-            workflow: AttributedWithoutInterface::class,
+            type: AttributedWithoutInterface::class,
         )->options;
 
         $this->assertSame('test-queue', $options->taskQueue);
@@ -43,11 +44,11 @@ final class ChildWorkflowStubTest extends TestCase
         $this->assertSame('500.0', $options->retryOptions->maximumInterval->format('%s.%f'));
     }
 
-    public function testAttributeOverrides()
+    public function testAttributeOverrides(): void
     {
         /** @var WorkflowOptions $options */
         $options = WorkflowStub::childWorkflow(
-            workflow: AttributedWithoutInterface::class,
+            type: AttributedWithoutInterface::class,
             taskQueue: 'test-queue-override',
             retryAttempts: 0,
             retryInitInterval: 10,
@@ -65,5 +66,12 @@ final class ChildWorkflowStubTest extends TestCase
         );
         $this->assertSame('10.0', $options->retryOptions->initialInterval->format('%s.%f'));
         $this->assertSame('200.0', $options->retryOptions->maximumInterval->format('%s.%f'));
+    }
+
+    public function testUntypedChildCreated(): void
+    {
+        $wf = WorkflowStub::childWorkflow(type: 'foo-bar');
+
+        self::assertInstanceOf(ChildWorkflowStubInterface::class, $wf);
     }
 }

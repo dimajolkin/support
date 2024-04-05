@@ -7,6 +7,7 @@ namespace Temporal\Support\Factory;
 use DateInterval;
 use Temporal\Client\WorkflowClientInterface;
 use Temporal\Client\WorkflowOptions;
+use Temporal\Client\WorkflowStubInterface;
 use Temporal\Common\IdReusePolicy;
 use Temporal\Internal\Client\WorkflowProxy;
 use Temporal\Internal\Workflow\ChildWorkflowProxy;
@@ -18,6 +19,7 @@ use Temporal\Support\Internal\Attribute\AttributeReader;
 use Temporal\Support\Internal\RetryOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\ChildWorkflowCancellationType as ChildCancelType;
+use Temporal\Workflow\ChildWorkflowStubInterface;
 use Temporal\Workflow\ParentClosePolicy;
 use Throwable;
 
@@ -28,7 +30,7 @@ final class WorkflowStub
      *
      * @template T of object
      *
-     * @param class-string<T> $workflow
+     * @param class-string<T>|non-empty-string $type Workflow name or class name.
      * @param non-empty-string|null $taskQueue
      * @param int<0, max>|null $retryAttempts Maximum number of attempts. When exceeded the retries stop even
      *        if not expired yet. If not set or set to 0, it means unlimited, and rely on activity
@@ -73,11 +75,11 @@ final class WorkflowStub
      *        of list workflow.
      * @param list<mixed> $memo Specifies additional non-indexed information in result of list workflow.
      *
-     * @return T|WorkflowProxy
+     * @return ($type is class-string ? T|WorkflowProxy : WorkflowStubInterface)
      */
     public static function workflow(
         WorkflowClientInterface $workflowClient,
-        string $workflow,
+        string $type,
         ?string $taskQueue = null,
         ?int $retryAttempts = null,
         \DateInterval|string|int|null $retryInitInterval = null,
@@ -95,7 +97,8 @@ final class WorkflowStub
         array $searchAttributes = [],
         array $memo = [],
     ): object {
-        $attributes = self::readAttributes($workflow);
+        $isUntyped = !\class_exists($type) && !\interface_exists($type);
+        $attributes = $isUntyped ? new AttributeCollection([]) : self::readAttributes($type);
 
         // Retry options
         $retryOptions = RetryOptions::create(
@@ -109,6 +112,7 @@ final class WorkflowStub
 
         $options = WorkflowOptions::new()->withRetryOptions($retryOptions);
         $taskQueue ??= $attributes->first(TaskQueue::class)?->name;
+        $taskQueue === null or $options = $options->withTaskQueue($taskQueue);
         // Start options
         $startDelay === 0 or $options = $options->withWorkflowStartDelay($startDelay);
         $eagerStart and $options = $options->withEagerStart(true);
@@ -125,7 +129,9 @@ final class WorkflowStub
         $searchAttributes === [] or $options = $options->withSearchAttributes($searchAttributes);
         $memo === [] or $options = $options->withMemo($memo);
 
-        return $workflowClient->newWorkflowStub($workflow, $options);
+        return $isUntyped
+            ? $workflowClient->newUntypedWorkflowStub($type, $options)
+            : $workflowClient->newWorkflowStub($type, $options);
     }
 
     /**
@@ -133,7 +139,7 @@ final class WorkflowStub
      *
      * @template T of object
      *
-     * @param class-string<T> $workflow
+     * @param class-string<T>|non-empty-string $type Workflow name or class name.
      * @param non-empty-string|null $taskQueue Task queue to use for workflow tasks. It should match a task queue
      *        specified when creating a {@see Worker} that hosts the workflow code.
      * @param non-empty-string|null $namespace Specify namespace in which workflow should be started.
@@ -174,10 +180,10 @@ final class WorkflowStub
      *        of list workflow.
      * @param list<mixed> $memo Specifies additional non-indexed information in result of list workflow.
      *
-     * @return T|ChildWorkflowProxy
+     * @return ($type is class-string ? T|ChildWorkflowProxy : ChildWorkflowStubInterface)
      */
     public static function childWorkflow(
-        string $workflow,
+        string $type,
         ?string $taskQueue = null,
         ?string $namespace = null,
         ?int $retryAttempts = null,
@@ -196,7 +202,8 @@ final class WorkflowStub
         array $searchAttributes = [],
         array $memo = [],
     ): object {
-        $attributes = self::readAttributes($workflow);
+        $isUntyped = !\class_exists($type) && !\interface_exists($type);
+        $attributes = $isUntyped ? new AttributeCollection([]) : self::readAttributes($type);
 
         // Retry options
         $retryOptions = RetryOptions::create(
@@ -232,7 +239,9 @@ final class WorkflowStub
         $searchAttributes === [] or $options = $options->withSearchAttributes($searchAttributes);
         $memo === [] or $options = $options->withMemo($memo);
 
-        return Workflow::newChildWorkflowStub($workflow, $options);
+        return $isUntyped
+            ? Workflow::newUntypedChildWorkflowStub($type, $options)
+            : Workflow::newChildWorkflowStub($type, $options);
     }
 
     /**
