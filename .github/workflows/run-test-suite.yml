@@ -107,4 +107,4 @@ jobs:
         run: composer update --no-interaction --no-progress
 
       - name: Run tests
-        run: vendor/bin/phpunit --testsuite=${{ inputs.test-suite }} --testdox
+        run: vendor/bin/pest --testdox
