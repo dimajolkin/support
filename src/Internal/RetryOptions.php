@@ -48,9 +48,9 @@ final class RetryOptions
         }
 
         $retryOptions = \Temporal\Common\RetryOptions::new();
-        $retryAttempts === 0 or $retryOptions = $retryOptions->withMaximumAttempts($retryAttempts);
-        $retryInitInterval === 0 or $retryOptions = $retryOptions->withInitialInterval($retryInitInterval);
-        $retryMaxInterval === 0 or $retryOptions = $retryOptions->withMaximumInterval($retryMaxInterval);
+        $retryAttempts > 0 and $retryOptions = $retryOptions->withMaximumAttempts($retryAttempts);
+        $retryInitInterval === null or $retryOptions = $retryOptions->withInitialInterval($retryInitInterval);
+        $retryMaxInterval === null or $retryOptions = $retryOptions->withMaximumInterval($retryMaxInterval);
         $retryBackoff >= 1.0 and $retryOptions = $retryOptions->withBackoffCoefficient($retryBackoff);
         $nonRetryables === [] or $retryOptions = $retryOptions->withNonRetryableExceptions($nonRetryables);
         return $retryOptions;

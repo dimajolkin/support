@@ -10,6 +10,7 @@ use RuntimeException;
 use Temporal\Support\Factory\ActivityStub;
 use Temporal\Support\Tests\Stub\Activity\AttributedWithoutInterface;
 use Temporal\Workflow;
+use Temporal\Workflow\ActivityStubInterface;
 
 final class ActivityStubTest extends TestCase
 {
@@ -27,7 +28,7 @@ final class ActivityStubTest extends TestCase
         parent::setUp();
     }
 
-    public function testDefaultsFromAttributes()
+    public function testDefaultsFromAttributes(): void
     {
         /** @var \Temporal\Activity\ActivityOptions $options */
         $options = ActivityStub::activity(
@@ -42,7 +43,7 @@ final class ActivityStubTest extends TestCase
         $this->assertSame('500.0', $options->retryOptions->maximumInterval->format('%s.%f'));
     }
 
-    public function testAttributeOverrides()
+    public function testAttributeOverrides(): void
     {
         /** @var \Temporal\Activity\ActivityOptions $options */
         $options = ActivityStub::activity(
@@ -64,5 +65,12 @@ final class ActivityStubTest extends TestCase
         );
         $this->assertSame('10.0', $options->retryOptions->initialInterval->format('%s.%f'));
         $this->assertSame('200.0', $options->retryOptions->maximumInterval->format('%s.%f'));
+    }
+
+    public function testUntypedActivity(): void
+    {
+        $activity = ActivityStub::activity();
+
+        self::assertInstanceOf(ActivityStubInterface::class, $activity);
     }
 }

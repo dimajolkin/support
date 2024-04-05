@@ -14,6 +14,7 @@ use Temporal\Support\Internal\Attribute\AttributeForActivity;
 use Temporal\Support\Internal\Attribute\AttributeReader;
 use Temporal\Support\Internal\RetryOptions;
 use Temporal\Workflow;
+use Temporal\Workflow\ActivityStubInterface;
 use Throwable;
 
 final class ActivityStub
@@ -23,7 +24,7 @@ final class ActivityStub
      *
      * @template T of object
      *
-     * @param class-string<T> $class
+     * @param class-string<T>|null $class Activity class name. When not set, an untyped activity stub is created.
      * @param non-empty-string|null $taskQueue
      * @param int<0, max>|null $retryAttempts Maximum number of attempts. When exceeded the retries stop even
      *        if not expired yet. If not set or set to 0, it means unlimited, and rely on activity
@@ -57,10 +58,10 @@ final class ActivityStub
      * @param int $cancellationType Whether to wait for canceled activity to be completed (activity can be failed,
      *        completed, cancel accepted). {@see \Temporal\Activity\ActivityCancellationType}
      *
-     * @return T|ActivityProxy
+     * @return ($class is class-string ? T|ActivityProxy : ActivityStubInterface)
      */
     public static function activity(
-        string $class,
+        ?string $class = null,
         ?string $taskQueue = null,
         ?int $retryAttempts = null,
         \DateInterval|string|int|null $retryInitInterval = null,
@@ -74,7 +75,7 @@ final class ActivityStub
         \Stringable|string|null $activityId = null,
         int $cancellationType = 0,
     ): object {
-        $attributes = self::readAttributes($class);
+        $attributes = $class !== null ? self::readAttributes($class) : new AttributeCollection([]);
 
         // Retry options
         $retryOptions = RetryOptions::create(
@@ -99,7 +100,9 @@ final class ActivityStub
         $activityId === null or $options = $options->withActivityId((string)$activityId);
         $cancellationType === null or $options = $options->withCancellationType($cancellationType);
 
-        return Workflow::newActivityStub($class, $options);
+        return $class === null
+            ? Workflow::newUntypedActivityStub($options)
+            : Workflow::newActivityStub($class, $options);
     }
 
     /**
