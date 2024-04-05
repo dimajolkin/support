@@ -59,6 +59,8 @@ final class ActivityStub
      *        completed, cancel accepted). {@see \Temporal\Activity\ActivityCancellationType}
      *
      * @return ($class is class-string ? T|ActivityProxy : ActivityStubInterface)
+     *
+     * @psalm-suppress LessSpecificReturnStatement,MoreSpecificReturnType
      */
     public static function activity(
         ?string $class = null,
@@ -98,7 +100,7 @@ final class ActivityStub
         $heartbeatTimeout === 0 or $options = $options->withHeartbeatTimeout($heartbeatTimeout);
         // Activity ID
         $activityId === null or $options = $options->withActivityId((string)$activityId);
-        $cancellationType === null or $options = $options->withCancellationType($cancellationType);
+        $cancellationType === 0 or $options = $options->withCancellationType($cancellationType);
 
         return $class === null
             ? Workflow::newUntypedActivityStub($options)

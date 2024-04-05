@@ -51,6 +51,7 @@ final class RetryOptions
         $retryAttempts > 0 and $retryOptions = $retryOptions->withMaximumAttempts($retryAttempts);
         $retryInitInterval === null or $retryOptions = $retryOptions->withInitialInterval($retryInitInterval);
         $retryMaxInterval === null or $retryOptions = $retryOptions->withMaximumInterval($retryMaxInterval);
+        /** @psalm-suppress PossiblyNullArgument */
         $retryBackoff >= 1.0 and $retryOptions = $retryOptions->withBackoffCoefficient($retryBackoff);
         $nonRetryables === [] or $retryOptions = $retryOptions->withNonRetryableExceptions($nonRetryables);
         return $retryOptions;

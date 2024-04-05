@@ -47,20 +47,19 @@ final class AttributeCollection
         return $result;
     }
 
-    public function has(string $class): bool
-    {
-        return $this->count($this->attributes[$class]) > 0;
-    }
-
     /**
+     * @param class-string $class
      * @return int<0, max>
      */
     public function count(string $class): int
     {
         $this->makeIndex($class);
-        return \count($this->attributes[$class]);
+        return \count($this->attributes[$class] ?? []);
     }
 
+    /**
+     * @param class-string $class
+     */
     private function makeIndex(string $class): void
     {
         if (\array_key_exists($class, $this->attributes)) {

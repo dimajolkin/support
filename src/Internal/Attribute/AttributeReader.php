@@ -100,6 +100,9 @@ final class AttributeReader
         return $result;
     }
 
+    /**
+     * @return list<class-string>
+     */
     private static function sortInterfaces(\ReflectionClass $class): array
     {
         $result = [];

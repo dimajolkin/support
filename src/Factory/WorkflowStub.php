@@ -76,6 +76,8 @@ final class WorkflowStub
      * @param list<mixed> $memo Specifies additional non-indexed information in result of list workflow.
      *
      * @return ($type is class-string ? T|WorkflowProxy : WorkflowStubInterface)
+     *
+     * @psalm-suppress LessSpecificReturnStatement,MoreSpecificReturnType
      */
     public static function workflow(
         WorkflowClientInterface $workflowClient,
@@ -97,8 +99,11 @@ final class WorkflowStub
         array $searchAttributes = [],
         array $memo = [],
     ): object {
-        $isUntyped = !\class_exists($type) && !\interface_exists($type);
-        $attributes = $isUntyped ? new AttributeCollection([]) : self::readAttributes($type);
+        $isTyped = self::isClassOrInterface($type);
+        /** @psalm-suppress ArgumentTypeCoercion */
+        $attributes = $isTyped
+            ? self::readAttributes($type)
+            : new AttributeCollection([]);
 
         // Retry options
         $retryOptions = RetryOptions::create(
@@ -129,9 +134,10 @@ final class WorkflowStub
         $searchAttributes === [] or $options = $options->withSearchAttributes($searchAttributes);
         $memo === [] or $options = $options->withMemo($memo);
 
-        return $isUntyped
-            ? $workflowClient->newUntypedWorkflowStub($type, $options)
-            : $workflowClient->newWorkflowStub($type, $options);
+        /** @psalm-suppress ArgumentTypeCoercion */
+        return $isTyped
+            ? $workflowClient->newWorkflowStub($type, $options)
+            : $workflowClient->newUntypedWorkflowStub($type, $options);
     }
 
     /**
@@ -181,6 +187,8 @@ final class WorkflowStub
      * @param list<mixed> $memo Specifies additional non-indexed information in result of list workflow.
      *
      * @return ($type is class-string ? T|ChildWorkflowProxy : ChildWorkflowStubInterface)
+     *
+     * @psalm-suppress LessSpecificReturnStatement,MoreSpecificReturnType
      */
     public static function childWorkflow(
         string $type,
@@ -202,8 +210,11 @@ final class WorkflowStub
         array $searchAttributes = [],
         array $memo = [],
     ): object {
-        $isUntyped = !\class_exists($type) && !\interface_exists($type);
-        $attributes = $isUntyped ? new AttributeCollection([]) : self::readAttributes($type);
+        $isTyped = self::isClassOrInterface($type);
+        /** @psalm-suppress ArgumentTypeCoercion */
+        $attributes = $isTyped
+            ? self::readAttributes($type)
+            : new AttributeCollection([]);
 
         // Retry options
         $retryOptions = RetryOptions::create(
@@ -239,9 +250,10 @@ final class WorkflowStub
         $searchAttributes === [] or $options = $options->withSearchAttributes($searchAttributes);
         $memo === [] or $options = $options->withMemo($memo);
 
-        return $isUntyped
-            ? Workflow::newUntypedChildWorkflowStub($type, $options)
-            : Workflow::newChildWorkflowStub($type, $options);
+        /** @psalm-suppress ArgumentTypeCoercion */
+        return $isTyped
+            ? Workflow::newChildWorkflowStub($type, $options)
+            : Workflow::newUntypedChildWorkflowStub($type, $options);
     }
 
     /**
@@ -250,5 +262,15 @@ final class WorkflowStub
     private static function readAttributes(string $class): AttributeCollection
     {
         return AttributeReader::collectionFromClass($class, [AttributeForWorkflow::class]);
+    }
+
+    /**
+     * @param non-empty-string $type
+     * @psalm-assert-if-true class-string $type
+     * @psalm-assert-if-false non-empty-string $type
+     */
+    private static function isClassOrInterface(string $type): bool
+    {
+        return \class_exists($type) || \interface_exists($type);
     }
 }

@@ -31,6 +31,8 @@ use React\Promise\PromiseInterface;
  *     }
  * }
  * ```
+ *
+ * @psalm-suppress TooManyTemplateParams
  */
 interface VirtualPromise extends PromiseInterface
 {
